@@ -1,6 +1,11 @@
 # Boids Flocking Simulation
 
-> Authors: Ge Jiang, Zixuan Wang [(email)](mailto:zwang3444@gatech.edu), Zhining Zhang, Xing Tong (mailto:txing31@gatech.edu)
+> Authors: 
+Ge Jiang [(email)](mailto:gejiang@gatech.edu), 
+Zixuan Wang [(email)](mailto:zwang3444@gatech.edu), 
+Zhining Zhang [(email)](zzhang3180@gatech.edu), 
+Xing Tong [(email)](mailto:txing31@gatech.edu),
+Yizhe Hong [(email)](mailto:yhong312@gatech.edu)
 
 [toc]
 
