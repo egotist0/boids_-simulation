@@ -1,4 +1,5 @@
 import taichi as ti
+import ffmpeg
 
 ti.init(arch=ti.gpu)
 
@@ -127,15 +128,5 @@ for i in range(1000):
     img = screen.to_numpy()
     video_manager.write_frame(img)
 
-video_manager.make_video(gif=True, mp4=True)
+# video_manager.make_video(gif=True, mp4=True)
 
-# gui = ti.GUI("Boids", (width, height))
-
-# while True:
-#     for e in gui.get_events(ti.GUI.PRESS):
-#         if e.key == ti.GUI.ESCAPE:
-#             exit()
-#     update()
-#     render()
-#     gui.set_image(screen)
-#     gui.show()
