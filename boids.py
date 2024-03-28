@@ -120,7 +120,7 @@ def update():
 init()
 
 video_manager = ti.tools.VideoManager(output_dir="./output",
-                                      framerate=60,
+                                      framerate=10,
                                       automatic_build=False)
 for i in range(1000):
     update()
@@ -128,5 +128,5 @@ for i in range(1000):
     img = screen.to_numpy()
     video_manager.write_frame(img)
 
-# video_manager.make_video(gif=True, mp4=True)
+video_manager.make_video(gif=True, mp4=True)
 
