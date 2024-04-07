@@ -44,7 +44,7 @@ def render():
                            boids_size + 1 + ti.cast(positions[i][1], ti.i32)):
                 if 0 <= x < width and 0 <= y < height:
                     screen[x, y] = color
-    
+
 
 
 

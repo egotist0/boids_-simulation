@@ -1,12 +1,12 @@
 # Boids Flocking Simulation
 
-> Authors: Authors: Ge Jiang [(email)](mailto:gejiang@@gatech.edu), Zixuan Wang [(email)](mailto:zwang3444@gatech.edu), Zhining Zhang [(email)](mailto:zzhang3180@gatech.edu), Xing Tong [(email)](mailto:txing31@gatech.edu), Yizhe Hong [(email)](mailto:yhong312@gatech.edu)
-[toc]
+> Authors: Authors: Ge Jiang [(email)](mailto:gejiang@@gatech.edu), Zhining Zhang [(email)](mailto:zzhang3180@gatech.edu), Xing Tong [(email)](mailto:txing31@gatech.edu), Yizhe Hong [(email)](mailto:yhong312@gatech.edu)
+
 
 ### Abstract
 
 In this project, we pursued an unconventional path in enhancing the traditional Boid Flocking simulation. Two novel features were introduced to delve into the nuanced aspects of collective behavior. Firstly, the incorporation of an energy model imposes a constraint on each boid. Secondly, the introduction of predators adds a compelling dimension, compelling the flock to engage their survival instincts more frequently. These modifications are aimed at scrutinizing and dissecting their impact on group dynamics and stability, all while evading predation. Through these endeavors, our objective is to gain deeper insights into the dynamics of animal life and interactions within natural systems.
-
+Presentation slides can be found [here](https://docs.google.com/presentation/d/1i1aomyqqpqrqwGwjjzXCHQ3CZLED7QYFCX82MFbC5U4/edit#slide=id.g2c9f19130db_0_136)
 
 
 ## System Description
