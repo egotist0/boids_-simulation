@@ -1,7 +1,7 @@
 import taichi as ti
 from .config import boids_num, width, height, boids_size, max_speed, min_speed, neighbor_radius, separation_radius, \
     alignment_weight, cohesion_weight, separation_weight, dt, obstacle_num, obstacle_size
-from .models import speeds, positions, screen, obstacles
+from .models import speeds, positions, screen, obstacles,energy,energy_consumption_rate,initial_energy
 
 
 @ti.func
@@ -19,10 +19,16 @@ def init():
         magnitude = ti.random() * init_radius
         speeds[i] = ti.Vector([random_range(0, 1) * max_speed, random_range(0, 1) * max_speed])
         positions[i] = center_point + direction * magnitude
+        initial_energy[i] = 10000.0  # Set the initial energy for each boid
+        energy[i] = initial_energy[i]  # Initialize the current energy
 
     # Initialize obstacles
     for i in range(obstacle_num):
         obstacles[i] = ti.Vector([ti.random() * width, ti.random() * height])
+
+    # Initialize the energy consumption rate
+    # Adjust this value to change the energy consumption rate
+    energy_consumption_rate[None] = 0.0025
 
 
 @ti.kernel
@@ -174,6 +180,12 @@ def update():
         if speeds[i].norm() < min_speed:
             speeds[i] = speeds[i].normalized() * min_speed
 
+        # Update energy level
+        # Energy consumption proportional to velocity squared
+        energy[i] -= energy_consumption_rate[None] * speeds[i].norm() ** 2
+        if energy[i] <= 0:
+            # Turn off all forces when the energy is depleted
+            speeds[i] = ti.Vector([0.0, 0.0])
 
         positions[i] += speeds[i] * dt  # Assuming `dt` is your timestep variable
 
