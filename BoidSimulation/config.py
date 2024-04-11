@@ -16,3 +16,8 @@ obstacle_num = 5  # Number of obstacles
 obstacle_size = 15
 
 dt = 0.05
+
+predator_num = 2
+predator_range = 40 # predator will track birds in this range
+predator_size = 6
+predator_speed = 80

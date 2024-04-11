@@ -1,6 +1,9 @@
 import taichi as ti
-from .config import boids_num, width, height, boids_size, max_speed, min_speed, neighbor_radius, separation_radius, alignment_weight, cohesion_weight, separation_weight, dt, obstacle_num, obstacle_size
-from .models import speeds, positions, screen, obstacles,energy,energy_consumption_rate,initial_energy
+from .config import boids_num, width, height, boids_size, max_speed, min_speed, neighbor_radius, separation_radius, \
+    alignment_weight, cohesion_weight, separation_weight, dt, obstacle_num, obstacle_size, \
+    predator_num, predator_range, predator_size, predator_speed
+from .models import speeds, positions, screen, obstacles,energy,energy_consumption_rate,initial_energy, \
+    predators_pos, predators_spd
 
 
 @ti.func
@@ -29,6 +32,14 @@ def init():
     # Adjust this value to change the energy consumption rate
     energy_consumption_rate[None] = 0.0025
 
+    # predator
+    for i in range(predator_num):
+        # direction = ti.Vector([ti.random() - 0.5, ti.random() - 0.5]).normalized()
+        # magnitude = ti.random() * init_radius
+        # predators_pos[i] = center_point + direction * magnitude
+        predators_pos[i] = ti.Vector([ti.random() * width, ti.random() * height])
+        predators_spd[i] = ti.Vector([random_range(0, 1) * max_speed, random_range(0, 1) * max_speed])
+
 
 @ti.kernel
 def render():
@@ -40,7 +51,7 @@ def render():
         s = speeds[i].norm()
         color = ti.Vector([0.0, 0.0, 0.0])
         if s == 0:
-            color = ti.Vector([1.0, 0.0, 0.0])
+            color = ti.Vector([1.0, 1.0, 0.0])
         else:
             color = ti.Vector([
                 abs(speeds[i][0]) / s,
@@ -68,11 +79,24 @@ def render():
                     if (x - obstacle_center[0]) ** 2 + (y - obstacle_center[1]) ** 2 <= obstacle_radius ** 2:
                         screen[x, y] = obstacle_color
 
+    # Draw predators
+    for i in range(predator_num):
+        pre_pos = predators_pos[i]
+        prer_adius = predator_size / 2
+        pre_spd = predators_spd[i]
+        pre_color = [1.0, 0.0, 0.0]  # You can customize the color of predators
 
+        for x in range(ti.cast(pre_pos[0] - prer_adius, ti.i32),
+                       ti.cast(pre_pos[0] + prer_adius, ti.i32) + 1):
+            for y in range(ti.cast(pre_pos[1] - prer_adius, ti.i32),
+                           ti.cast(pre_pos[1] + prer_adius, ti.i32) + 1):
+                if 0 <= x < width and 0 <= y < height:
+                    screen[x, y] = pre_color
 
 
 @ti.func
 def wrap():
+    # for birds
     for i in range(boids_num):
         if positions[i][0] < 0:
             positions[i][0] += width
@@ -83,6 +107,16 @@ def wrap():
         elif positions[i][1] > height:
             positions[i][1] -= height
 
+    # for predators
+    for i in range(predator_num):
+        if predators_pos[i][0] < 0:
+            predators_pos[i][0] += width
+        elif predators_pos[i][0] > width:
+            predators_pos[i][0] -= width
+        if predators_pos[i][1] < 0:
+            predators_pos[i][1] += height
+        elif predators_pos[i][1] > height:
+            predators_pos[i][1] -= height
 
 @ti.func
 def bounceoff():
@@ -95,6 +129,24 @@ def bounceoff():
             speeds[i][1] += 1
         elif positions[i][1] > height - 50:
             speeds[i][1] -= 1
+
+@ti.func
+def track_birds(j: int) -> ti.Vector:
+    total = ti.Vector([0.0, 0.0])
+    count = 0
+
+    for i in range(boids_num):
+        if (positions[i] - predators_pos[j]).norm() < predator_range:
+            total += positions[i]
+            count += 1
+
+    attraction = ti.Vector([0.0, 0.0])
+    if count > 0:
+        attraction = (total / count) - predators_pos[j]
+
+    return attraction
+
+
 @ti.func
 def closest_point_on_obstacle(boid_pos, obstacle_center, obstacle_half_size):
     closest_x = max(obstacle_center.x - obstacle_half_size, min(boid_pos.x, obstacle_center.x + obstacle_half_size))
@@ -123,6 +175,38 @@ def obstacles_force(i: int) -> ti.Vector:
 
     return force
 
+@ti.func
+def obstacles_pre(i: int) -> ti.Vector:
+    # avoid obstacles for predators
+    force = ti.Vector([0.0, 0.0])
+    for j in range(obstacle_num):
+        obstacle_center = obstacles[j]
+        closest_point = closest_point_on_obstacle(predators_pos[i], obstacle_center, obstacle_size / 2)
+        dir_to_obstacle = predators_pos[i] - closest_point
+        distance = dir_to_obstacle.norm()
+
+        # Immediate reaction when too close to an obstacle
+        if distance < 80:  # Immediate avoidance distance
+            repulsion_force = dir_to_obstacle.normalized() * (1 / max(distance, 1)) * predator_speed
+            force += repulsion_force
+
+    return force
+
+@ti.func
+def escape_predator(i: int) -> ti.Vector:
+    force = ti.Vector([0.0, 0.0])
+
+    for j in range(predator_num):
+        pre_point = predators_pos[j]
+        dir_to_pre = positions[i] - pre_point
+        distance = dir_to_pre.norm()
+
+        # Immediate reaction when too close to an obstacle
+        if distance < 50:  # Immediate avoidance distance
+            repulsion_force = dir_to_pre.normalized() * (1 / max(distance, 1)) * max_speed
+            force += repulsion_force
+
+    return force
 
 @ti.func
 def cohesion(i: int) -> ti.Vector:
@@ -175,17 +259,34 @@ def alignment(i: int) -> ti.Vector:
 
 @ti.kernel
 def update():
+    # predator
+    for i in range(predator_num):
+        track_force = track_birds(i)
+        obstacle_force = obstacles_pre(i)
+        acceleration = track_force + obstacle_force
+
+
+        # Update velocity and position
+        predators_spd[i] += acceleration
+        # Apply velocity limits (if necessary)
+        if predators_spd[i].norm() > max_speed:
+            predators_spd[i] = predators_spd[i].normalized() * predator_speed
+        if predators_spd[i].norm() < min_speed:
+            predators_spd[i] = predators_spd[i].normalized() * min_speed
+
+        predators_pos[i] += predators_spd[i] * dt  # Assuming `dt` is your timestep variable
+
     for i in range(boids_num):
         # Compute forces from behaviors
         cohesion_force = cohesion(i)
         separation_force = separation(i)
         alignment_force = alignment(i)
         obstacle_force = obstacles_force(i)
-
+        predator_force = escape_predator(i)
 
 
         # Sum forces to determine acceleration
-        acceleration = cohesion_force + separation_force + alignment_force + obstacle_force
+        acceleration = cohesion_force + separation_force + alignment_force + obstacle_force + (3 * predator_force)
 
         # Update velocity and position
         speeds[i] += acceleration
