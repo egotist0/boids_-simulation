@@ -12,7 +12,7 @@ alignment_weight = 6
 cohesion_weight = 80
 separation_weight = 1.15
 
-obstacle_num = 2  # Number of obstacles
-obstacle_size = 5
+obstacle_num = 5  # Number of obstacles
+obstacle_size = 15
 
 dt = 0.05

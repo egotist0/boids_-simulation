@@ -1,6 +1,5 @@
 import taichi as ti
-from .config import boids_num, width, height, boids_size, max_speed, min_speed, neighbor_radius, separation_radius, \
-    alignment_weight, cohesion_weight, separation_weight, dt, obstacle_num, obstacle_size
+from .config import boids_num, width, height, boids_size, max_speed, min_speed, neighbor_radius, separation_radius, alignment_weight, cohesion_weight, separation_weight, dt, obstacle_num, obstacle_size
 from .models import speeds, positions, screen, obstacles,energy,energy_consumption_rate,initial_energy
 
 
@@ -51,6 +50,20 @@ def render():
                 if 0 <= x < width and 0 <= y < height:
                     screen[x, y] = color
 
+    # Draw obstacles as circles
+    for i in range(obstacle_num):
+        obstacle_center = obstacles[i]
+        obstacle_radius = obstacle_size / 2
+        obstacle_color = [1.0, 1.0, 1.0]  # You can customize the color of obstacles
+
+        for x in range(ti.cast(obstacle_center[0] - obstacle_radius, ti.i32),
+                        ti.cast(obstacle_center[0] + obstacle_radius, ti.i32) + 1):
+            for y in range(ti.cast(obstacle_center[1] - obstacle_radius, ti.i32),
+                            ti.cast(obstacle_center[1] + obstacle_radius, ti.i32) + 1):
+                if 0 <= x < width and 0 <= y < height:
+                    if (x - obstacle_center[0]) ** 2 + (y - obstacle_center[1]) ** 2 <= obstacle_radius ** 2:
+                        screen[x, y] = obstacle_color
+
 
 
 
@@ -97,16 +110,14 @@ def obstacles_force(i: int) -> ti.Vector:
 
         # Immediate reaction when too close to an obstacle
         if distance < 80:  # Immediate avoidance distance
-            repulsion_force = -dir_to_obstacle.normalized() * (1 / max(distance, 1)) * max_speed
+            repulsion_force = dir_to_obstacle.normalized() * (1 / max(distance, 1)) * max_speed
             force += repulsion_force
         # Proactive avoidance based on distance to the closest point on the obstacle
         elif distance < separation_radius:
-            repulsion_force = -dir_to_obstacle.normalized() * (separation_radius - distance) / separation_radius * max_speed
+            repulsion_force = dir_to_obstacle.normalized() * (separation_radius - distance) / separation_radius * max_speed
             force += repulsion_force / 1.0
 
     return force
-
-
 
 
 @ti.func
@@ -165,12 +176,12 @@ def update():
         cohesion_force = cohesion(i)
         separation_force = separation(i)
         alignment_force = alignment(i)
-        # obstacle_force = obstacles_force(i)
+        obstacle_force = obstacles_force(i)
 
 
 
         # Sum forces to determine acceleration
-        acceleration = cohesion_force + separation_force + alignment_force
+        acceleration = cohesion_force + separation_force + alignment_force + obstacle_force
 
         # Update velocity and position
         speeds[i] += acceleration
