@@ -38,11 +38,15 @@ def render():
     # draw boids
     for i in positions:
         s = speeds[i].norm()
-        color = ti.Vector([
-            abs(speeds[i][0]) / s,
-            abs(speeds[i][1]) / s,
-            abs(speeds[i][0]) / s
-        ])
+        color = ti.Vector([0.0, 0.0, 0.0])
+        if s == 0:
+            color = ti.Vector([1.0, 0.0, 0.0])
+        else:
+            color = ti.Vector([
+                abs(speeds[i][0]) / s,
+                abs(speeds[i][1]) / s,
+                abs(speeds[i][0]) / s
+            ])
         for x in range(-boids_size + ti.cast(positions[i][0], ti.i32),
                        boids_size + 1 + ti.cast(positions[i][0], ti.i32)):
             for y in range(-boids_size + ti.cast(positions[i][1], ti.i32),
