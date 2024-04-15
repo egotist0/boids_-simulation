@@ -1,5 +1,4 @@
 import taichi as ti
-import ffmpeg
 
 ti.init(arch=ti.gpu)
 

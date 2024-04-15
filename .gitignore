@@ -1,3 +1,5 @@
 .idea
-./output
+./output/
 ./BoidSimulation/__pycache__
+*.mp4
+*.png

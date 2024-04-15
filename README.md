@@ -2,6 +2,11 @@
 
 > Authors: Authors: Ge Jiang [(email)](mailto:gejiang@@gatech.edu), Zhining Zhang [(email)](mailto:zzhang3180@gatech.edu), Xing Tong [(email)](mailto:txing31@gatech.edu), Yizhe Hong [(email)](mailto:yhong312@gatech.edu)
 
+### Setup and Run
+pip install - r requirement.txt \
+python main.py
+
+
 
 ### Abstract
 
